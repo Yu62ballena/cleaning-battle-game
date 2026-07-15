@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { GAME_CONFIG } from '../config/gameConfig';
 
-export class Base extends Phaser.GameObjects.Rectangle {
+export class Base extends Phaser.GameObjects.Sprite {
     public hp: number;
     public isOpen: boolean;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 100, 100, GAME_CONFIG.COLORS.BASE);
+        super(scene, x, y, 'base');
         this.hp = GAME_CONFIG.BASE_MAX_HP;
         this.isOpen = false;
 
@@ -16,6 +16,12 @@ export class Base extends Phaser.GameObjects.Rectangle {
 
     public updateHp(deltaHp: number) {
         if (this.isOpen && deltaHp < 0) return; // Cannot decrease if already open
+
+        // Allow closing if repaired when open
+        if (this.isOpen && deltaHp > 0) {
+            this.isOpen = false;
+            this.setAlpha(1); // Reset visual cue
+        }
 
         this.hp += deltaHp;
         if (this.hp > GAME_CONFIG.BASE_MAX_HP) {

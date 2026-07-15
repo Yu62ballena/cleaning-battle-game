@@ -11,8 +11,8 @@ export class GameScene extends Phaser.Scene {
     private child!: Child;
     private base!: Base;
     private toys!: Phaser.GameObjects.Group;
-    private trashCan!: Phaser.GameObjects.Rectangle;
-    private repairKit!: Phaser.GameObjects.Rectangle;
+    private trashCan!: Phaser.GameObjects.Sprite;
+    private repairKit!: Phaser.GameObjects.Sprite;
     private baseHpText!: Phaser.GameObjects.Text;
     private baseHpBar!: Phaser.GameObjects.Graphics;
 
@@ -44,11 +44,11 @@ export class GameScene extends Phaser.Scene {
         this.base = new Base(this, width / 2, height / 2);
 
         // Trash Can
-        this.trashCan = this.add.rectangle(width - 50, height - 50, 60, 60, GAME_CONFIG.COLORS.TRASH);
+        this.trashCan = this.add.sprite(width - 50, height - 50, 'trash');
         this.physics.add.existing(this.trashCan, true);
 
         // Repair Kit
-        this.repairKit = this.add.rectangle(50, 50, 30, 30, GAME_CONFIG.COLORS.KIT);
+        this.repairKit = this.add.sprite(50, 50, 'repair_kit');
         this.physics.add.existing(this.repairKit, true);
 
         // Entities
@@ -85,18 +85,44 @@ export class GameScene extends Phaser.Scene {
     }
 
     private spawnToys() {
-        // Floor toys
-        for(let i=0; i<5; i++) {
-            const x = Phaser.Math.Between(100, 700);
-            const y = Phaser.Math.Between(100, 500);
-            const toy = new Toy(this, x, y, 'small', `small_${i}`);
+        // Toys inside the Base
+        const baseX = this.base.x;
+        const baseY = this.base.y;
+
+        // Spawn 2 small toys and 1 large toy inside base bounds
+        for(let i=0; i<2; i++) {
+            const x = baseX + Phaser.Math.Between(-30, 30);
+            const y = baseY + Phaser.Math.Between(-30, 30);
+            const toy = new Toy(this, x, y, 'small', `base_small_${i}`);
             this.toys.add(toy);
         }
-        for(let i=0; i<2; i++) {
+        {
+            const x = baseX + Phaser.Math.Between(-20, 20);
+            const y = baseY + Phaser.Math.Between(-20, 20);
+            const toy = new Toy(this, x, y, 'large', `base_large_0`);
+            this.toys.add(toy);
+        }
+
+        // Floor toys
+        let floorSmallCount = 0;
+        let floorLargeCount = 0;
+
+        while (floorSmallCount < 5 || floorLargeCount < 2) {
             const x = Phaser.Math.Between(100, 700);
             const y = Phaser.Math.Between(100, 500);
-            const toy = new Toy(this, x, y, 'large', `large_${i}`);
-            this.toys.add(toy);
+
+            // Avoid spawning on top of the base area
+            if (Phaser.Math.Distance.Between(x, y, baseX, baseY) < 80) continue;
+
+            if (floorSmallCount < 5) {
+                const toy = new Toy(this, x, y, 'small', `floor_small_${floorSmallCount}`);
+                this.toys.add(toy);
+                floorSmallCount++;
+            } else if (floorLargeCount < 2) {
+                const toy = new Toy(this, x, y, 'large', `floor_large_${floorLargeCount}`);
+                this.toys.add(toy);
+                floorLargeCount++;
+            }
         }
     }
 
@@ -171,14 +197,14 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    private handleParentTrashOverlap(parent: Parent, _trashCan: Phaser.GameObjects.Rectangle) {
+    private handleParentTrashOverlap(parent: Parent, _trashCan: Phaser.GameObjects.Sprite) {
         if (parent.inventory.length > 0) {
             parent.emptyInventory();
             this.notifyStateUpdate();
         }
     }
 
-    private handleChildKitOverlap(child: Child, kit: Phaser.GameObjects.Rectangle) {
+    private handleChildKitOverlap(child: Child, kit: Phaser.GameObjects.Sprite) {
         if (!child.hasKit) {
             child.setHasKit(true);
             kit.setVisible(false);
