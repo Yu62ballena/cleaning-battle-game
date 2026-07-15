@@ -19,14 +19,8 @@ export class Child extends Phaser.Physics.Arcade.Sprite {
         (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
         // Visual representation
-        const graphics = scene.add.graphics();
-        graphics.fillStyle(GAME_CONFIG.COLORS.CHILD);
-        graphics.fillRect(-20, -20, 40, 40);
-
-        // Render graphics to texture so we can use it as a sprite
-        graphics.generateTexture('child', 40, 40);
-        graphics.destroy();
         this.setTexture('child');
+        this.setOrigin(0.5, 0.5);
 
         // Input
         this.keys = {
@@ -62,6 +56,13 @@ export class Child extends Phaser.Physics.Arcade.Sprite {
         }
 
         this.setVelocity(velocityX, velocityY);
+
+        // Walk animation (Bounce effect)
+        if (velocityX !== 0 || velocityY !== 0) {
+            this.scaleY = 1 + Math.sin(time / 50) * 0.1;
+        } else {
+            this.scaleY = 1;
+        }
     }
 
     setHasKit(hasKit: boolean) {

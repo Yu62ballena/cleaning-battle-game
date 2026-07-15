@@ -16,12 +16,9 @@ export class Parent extends Phaser.Physics.Arcade.Sprite {
         (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
         // Visual representation
-        const graphics = scene.add.graphics();
-        graphics.fillStyle(GAME_CONFIG.COLORS.PARENT);
-        graphics.fillRect(-20, -20, 40, 40);
-        graphics.generateTexture('parent', 40, 40);
-        graphics.destroy();
         this.setTexture('parent');
+        // Set origin to center
+        this.setOrigin(0.5, 0.5);
 
         this.cursors = scene.input.keyboard!.createCursorKeys();
     }
@@ -75,5 +72,12 @@ export class Parent extends Phaser.Physics.Arcade.Sprite {
         }
 
         this.setVelocity(velocityX, velocityY);
+
+        // Walk animation (Bounce effect)
+        if (velocityX !== 0 || velocityY !== 0) {
+            this.scaleY = 1 + Math.sin(time / 50) * 0.1;
+        } else {
+            this.scaleY = 1;
+        }
     }
 }
